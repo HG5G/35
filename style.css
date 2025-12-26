@@ -1,0 +1,242 @@
+/* استدعاء الخط الاحترافي */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap');
+
+body {
+    margin: 0;
+    background-color: #1a1a1a; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Chakra Petch', sans-serif;
+    overflow: hidden;
+}
+
+/* 1. الحاوية الأساسية للعبة */
+.game-container {
+    width: 500px;
+    height: 700px;
+    position: relative;
+    border-radius: 15px;
+    border: 8px solid #333;
+    overflow: hidden; 
+    background: linear-gradient(to top, #65a7f9 0%, #7de0ff 100%); 
+    transition: background 1s ease;
+}
+
+/* 2. نظام العرض العلوي (الوقت والسكور أثناء اللعب) */
+.top-display {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 25px;
+    box-sizing: border-box;
+    z-index: 15;
+    align-items: center;
+}
+
+.timer-display {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+    letter-spacing: 1px;
+}
+
+.score-display {
+    font-size: 55px;
+    font-weight: 900;
+    color: #ffd700; 
+    text-shadow: 0 0 5px #ffeb3b, 0 0 10px #ffc107, 2px 2px 3px rgba(0, 0, 0, 0.8);
+    transition: color 0.3s ease;
+}
+
+/* 3. نظام السحاب (الخلفية المتحركة) */
+.clouds-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.cloud {
+    position: absolute;
+    z-index: 1;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* 4. الطائر الصغير (الذي يتم اللعب به) */
+.bird {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    z-index: 200; 
+    object-fit: contain;
+    transition: transform 0.1s linear, opacity 0.3s ease;
+    display: none; 
+}
+
+/* 5. تصميم الأنابيب (تأثير 3D ولامع) */
+.pipe {
+    position: absolute;
+    width: 60px; 
+    z-index: 5;
+    /* تدرج لوني يحاكي انعكاس الضوء على الأسطوانة */
+    background: linear-gradient(to right, 
+        rgba(0,0,0,0.3) 0%, 
+        rgba(255,255,255,0.15) 20%, 
+        rgba(255,255,255,0.3) 50%, 
+        rgba(0,0,0,0.1) 80%, 
+        rgba(0,0,0,0.4) 100%);
+    border-left: 2px solid rgba(0,0,0,0.2);
+    border-right: 2px solid rgba(0,0,0,0.2);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
+}
+
+.pipe::after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 80px; 
+    height: 35px; 
+    left: -12px; 
+    z-index: 6; 
+    border: 3px solid rgba(0,0,0,0.3);
+    border-radius: 6px;
+    background: inherit; /* تأخذ نفس تدرج جسم الأنبوب */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.4);
+}
+
+.top-pipe { border-bottom: 3px solid rgba(0,0,0,0.3); }
+.top-pipe::after { bottom: -2px; } 
+
+.bottom-pipe { border-top: 3px solid rgba(0,0,0,0.3); }
+.bottom-pipe::after { top: -2px; }
+
+/* ألوان الأنابيب حسب المستوى (تم دمجها مع التأثير) */
+.level-1 { background-color: #3f7e00; }
+.level-2 { background-color: #e67e22; }
+.level-3 { background-color: #8e44ad; }
+.level-4 { background-color: #7f8c8d; }
+.level-5 { background-color: #c0392b; }
+.level-6 { 
+    background-color: #f1c40f; 
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.4), inset 0 0 15px rgba(0,0,0,0.2); 
+}
+
+/* 6. واجهة المستخدم (البطاقة الزجاجية) */
+.start-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    pointer-events: auto; 
+}
+
+.ui-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px 20px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    text-align: center;
+    width: 85%;
+    max-width: 420px;
+    box-sizing: border-box;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.hero-bird-container {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 110px;
+}
+
+#heroBird {
+    width: 85px;
+    height: 85px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+    animation: birdFloat 2s infinite ease-in-out;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes birdFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+.game-title {
+    font-size: 42px; 
+    color: #ffd700;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hint-text { color: #ddd; margin-bottom: 25px; font-size: 16px; }
+
+.play-button {
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    border: none;
+    padding: 14px 45px;
+    border-radius: 50px;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 255, 255, 0.3);
+}
+
+.play-button:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 0, 255, 0.5);
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    gap: 12px;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px 10px;
+    border-radius: 18px;
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-box span { display: block; color: #aaa; font-size: 13px; margin-bottom: 5px; }
+.stat-box b { font-size: 24px; color: #fff; }
+
+.footer-text { margin-top: 25px; font-size: 13px; color: #777; }
+.footer-text span { color: #00ffff; }
+
+/* 7. الطائر الشرير */
+.evil-bird {
+    position: absolute;
+    width: 50px; /* حجمه أكبر قليلاً من طائرك */
+    height: 50px;
+    z-index: 100;
+    object-fit: contain;
+    /* الطائر قادم من اليمين، لذا سنعكس اتجاهه ليكون وجهه لليسار */
+    transform: scaleX(1); 
+    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8)); /* وهج أحمر شرير */
+}
