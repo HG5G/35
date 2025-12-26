@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الطائر القفاز المحترف - V2</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="clouds-container"></div>
+        
+        <div class="top-display">
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <div class="score-display" id="scoreDisplay">0</div>
+        </div>
+        
+        <div class="start-screen" id="startScreen">
+            <div class="ui-card">
+                
+                <div class="hero-bird-container">
+                    <img id="heroBird" src="bird_up.png" alt="Hero Bird">
+                </div>
+
+                <h1 class="game-title" id="mainTitle">FLAPPY BIRD</h1>
+                
+                <div id="initialInstructions">
+                    <p class="hint-text">تحدى نفسك وحطم الأرقام القياسية</p>
+                    <button class="play-button" onclick="handleAction()">ابدأ اللعب</button>
+                </div>
+
+                <div id="gameOverStats" style="display: none;">
+                    <div class="stats-row">
+                        <div class="stat-box">
+                            <span>النقاط</span>
+                            <b id="finalScore">0</b>
+                        </div>
+                        <div class="stat-box">
+                            <span>الوقت</span>
+                            <b id="finalTime">00:00</b>
+                        </div>
+                    </div>
+                    <button class="play-button" onclick="handleAction()">حاول مرة أخرى</button>
+                </div>
+                
+                <p class="footer-text">اضغط <span>Space</span> أو <span>المس الشاشة</span></p>
+            </div>
+        </div>
+        
+        <img class="bird" id="bird" src="bird_up.png" alt="الطائر">
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
