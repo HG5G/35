@@ -80,6 +80,11 @@ body {
     object-fit: contain;
     transition: transform 0.1s linear, opacity 0.3s ease;
     display: none; 
+
+    /* ضيف السطور الجديدة دي هنا */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 
 /* 5. تصميم الأنابيب (تأثير 3D ولامع) */
