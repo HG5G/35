@@ -23,12 +23,11 @@ const backgroundMusic = new Audio('background.mp3');
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.5;
 
-// --- تحريك الطائر (تم حل مشكلة الموبايل هنا) ---
+// --- تحريك الطائر ---
 const birdImages = ["bird_up.png", "bird_down.png"]; 
 let birdImageIndex = 0; 
 let animationTimerId; 
 
-// تحميل مسبق للصور لضمان سلاسة الحركة في الموبايل
 birdImages.forEach(src => {
     const img = new Image();
     img.src = src;
@@ -67,23 +66,45 @@ let timerInterval;
 let highScore = localStorage.getItem('flappyHighScore') || 0;
 
 // ==========================================================
-// 2. منطق التحكم والوقت والتحريك
+// 2. منطق التحكم (الإصلاح الجوهري هنا)
 // ==========================================================
 
-function updateTimer() {
-    let now = Date.now();
-    let diff = now - startTime;
-    let mins = Math.floor(diff / 60000);
-    let secs = Math.floor((diff % 60000) / 1000);
-    timerDisplay.innerText = (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
+function handleAction(e) {
+    if (e) e.preventDefault(); // منع أي سلوك افتراضي للمتصفح
+
+    // حالة الخسارة: إذا سقط الطائر تماماً، نعيد اللعبة عند الضغط
+    if (isGameOver) {
+        if (birdBottom <= -birdDiameter) {
+            resetGame();
+        }
+        return;
+    }
+
+    // بدء اللعبة لأول مرة
+    if (!isGameStarted) {
+        resetGame();
+    } else {
+        // أثناء اللعب: القفز
+        jump();
+    }
 }
 
-function handleAction() {
-    if (isGameOver && birdBottom > -birdDiameter) return;
-    if (!isGameStarted) {
-        resetGame(); 
-    } else {
-        jump();
+// ربط الأحداث (الكمبيوتر والموبايل)
+document.addEventListener('keydown', (e) => {
+    if (e.code === "Space") handleAction(e);
+});
+
+// اللمس للموبايل والضغط للماوس
+gameContainer.addEventListener('touchstart', handleAction, { passive: false });
+gameContainer.addEventListener('mousedown', (e) => {
+    if (e.button === 0) handleAction(e); // الضغط بالزر الأيسر للماوس
+});
+
+function jump() {
+    if (birdBottom < containerHeight - birdDiameter - 10) {
+        birdBottom += jumpStrength; 
+        jumpSound.currentTime = 0;
+        jumpSound.play().catch(() => {});
     }
 }
 
@@ -96,9 +117,9 @@ function resetGame() {
     spawnInterval = 3000;
     currentPipeClass = 'level-1';
     
-    // تشغيل الموسيقى
+    // تفعيل الموسيقى مع أول تفاعل
     backgroundMusic.currentTime = 0;
-    backgroundMusic.play().catch(e => console.log("Audio play deferred"));
+    backgroundMusic.play().catch(() => {});
 
     startScreen.style.display = 'none';
     startScreen.style.pointerEvents = 'none';
@@ -120,7 +141,6 @@ function resetGame() {
     clearInterval(timerInterval);
     timerInterval = setInterval(updateTimer, 1000); 
 
-    // تنظيف العناصر القديمة
     document.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
     document.querySelectorAll('.evil-bird').forEach(eb => eb.remove());
     evilBirds = [];
@@ -131,13 +151,24 @@ function resetGame() {
     clearInterval(animationTimerId);
     clearInterval(evilBirdAnimateTimer);
     
-    // تشغيل الـ Animation (تم ضبط التوقيت ليكون أفضل للموبايل)
     animationTimerId = setInterval(animateBird, 120); 
     evilBirdAnimateTimer = setInterval(animateEvilBirds, 150); 
     
     startGameLoop(); 
     setTimeout(createPipes, 100); 
     setTimeout(spawnEvilBirdLoop, 2000); 
+}
+
+// ==========================================================
+// 3. بقية دوال اللعبة (التحريك، الوقت، الأنابيب)
+// ==========================================================
+
+function updateTimer() {
+    let now = Date.now();
+    let diff = now - startTime;
+    let mins = Math.floor(diff / 60000);
+    let secs = Math.floor((diff % 60000) / 1000);
+    timerDisplay.innerText = (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
 }
 
 function animateBird() {
@@ -175,22 +206,6 @@ function startGameLoop() {
     }, 20); 
 }
 
-function jump() {
-    if (birdBottom < containerHeight - birdDiameter - 10) {
-        birdBottom += jumpStrength; 
-        jumpSound.currentTime = 0;
-        jumpSound.play().catch(e => {});
-    }
-}
-
-// ==========================================================
-// 3. منطق الأنابيب والتصادم
-// ==========================================================
-
-function randomNumber(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
 function createPipes() {
     if (isGameOver || !isGameStarted) return; 
 
@@ -200,7 +215,6 @@ function createPipes() {
 
     const topPipe = document.createElement('div');
     const bottomPipe = document.createElement('div');
-
     topPipe.classList.add('pipe', 'top-pipe', currentPipeClass);
     bottomPipe.classList.add('pipe', 'bottom-pipe', currentPipeClass);
     
@@ -229,7 +243,7 @@ function createPipes() {
                 scoreDisplay.innerText = score;
                 hasScored = true;
                 scoreSound.currentTime = 0;
-                scoreSound.play().catch(e => {});
+                scoreSound.play().catch(() => {});
 
                 if (score % 10 === 0 && score <= 50) {
                     pipeSpeed += 0.3; 
@@ -261,10 +275,6 @@ function createPipes() {
     let pipeTimerId = setInterval(movePipe, 20); 
     pipeSpawnTimer = setTimeout(createPipes, spawnInterval); 
 }
-
-// ==========================================================
-// 4. منطق الطائر الشرير
-// ==========================================================
 
 function spawnEvilBirdLoop() {
     if (isGameOver || !isGameStarted) return;
@@ -313,9 +323,62 @@ function createEvilBird() {
     }, 20);
 }
 
-// ==========================================================
-// 5. النهاية والسقوط
-// ==========================================================
+function randomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function gameOver(reason) {
+    if (isGameOver) return;
+    isGameOver = true;
+    isGameStarted = false;
+
+    backgroundMusic.pause();
+    hitSound.currentTime = 0;
+    hitSound.play().catch(() => {});
+
+    clearInterval(timerInterval); 
+    clearInterval(gameTimerId); 
+    clearInterval(animationTimerId); 
+    clearInterval(evilBirdAnimateTimer);
+    clearTimeout(pipeSpawnTimer);
+    clearTimeout(evilBirdSpawnTimer);
+
+    evilBirds.forEach(eb => {
+        if (eb.moveTimer) clearInterval(eb.moveTimer);
+    });
+
+    bird.src = "bird_dead.png"; 
+    bird.style.transform = `rotate(90deg)`; 
+    heroBird.src = "bird_dead.png"; 
+    heroBird.style.transform = "scale(1.5) rotate(90deg)"; 
+
+    if(initialInstructions) initialInstructions.style.display = 'none';
+    if(gameOverStats) gameOverStats.style.display = 'block';
+    
+    finalScore.innerText = score;
+    finalTime.innerText = timerDisplay.innerText;
+    
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('flappyHighScore', highScore);
+    }
+    
+    deathFall(); 
+}
+
+function deathFall() {
+    clearInterval(deathFallTimer);
+    deathFallTimer = setInterval(() => {
+        birdBottom -= gravity * 4; 
+        bird.style.bottom = birdBottom + 'px';
+        if (birdBottom <= -birdDiameter) {
+            clearInterval(deathFallTimer);
+            startScreen.style.display = 'flex'; 
+            startScreen.style.pointerEvents = 'all';
+            bird.style.display = 'none'; 
+        }
+    }, 20);
+}
 
 function createCloud() {
     if (document.querySelectorAll('.cloud').length >= 4) return;
@@ -343,67 +406,7 @@ function createCloud() {
 }
 setInterval(createCloud, 10000);
 
-function deathFall() {
-    clearInterval(deathFallTimer);
-    deathFallTimer = setInterval(() => {
-        birdBottom -= gravity * 4; 
-        bird.style.bottom = birdBottom + 'px';
-        if (birdBottom <= -birdDiameter) {
-            clearInterval(deathFallTimer);
-            startScreen.style.display = 'flex'; 
-            startScreen.style.pointerEvents = 'all';
-            bird.style.display = 'none'; 
-        }
-    }, 20);
-}
-
-function gameOver(reason) {
-    if (isGameOver) return;
-    isGameOver = true;
-    isGameStarted = false;
-
-    // الأصوات عند الموت
-    backgroundMusic.pause();
-    hitSound.currentTime = 0;
-    hitSound.play().catch(e => {});
-
-    clearInterval(timerInterval); 
-    clearInterval(gameTimerId); 
-    clearInterval(animationTimerId); 
-    clearInterval(evilBirdAnimateTimer);
-    clearTimeout(pipeSpawnTimer);
-    clearTimeout(evilBirdSpawnTimer);
-
-    // تجميد الطيور الشريرة في مكانها
-    evilBirds.forEach(eb => {
-        if (eb.moveTimer) clearInterval(eb.moveTimer);
-    });
-
-    bird.src = "bird_dead.png"; 
-    bird.style.transform = `rotate(90deg)`; 
-    heroBird.src = "bird_dead.png"; 
-    heroBird.style.transform = "scale(1.5) rotate(90deg)"; 
-
-    if(initialInstructions) initialInstructions.style.display = 'none';
-    if(gameOverStats) gameOverStats.style.display = 'block';
-    
-    finalScore.innerText = score;
-    finalTime.innerText = timerDisplay.innerText;
-    
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('flappyHighScore', highScore);
-    }
-    
-    deathFall(); 
-}
-
 // التشغيل الأولي
 drawBird();
 bird.style.display = 'none'; 
 setTimeout(createCloud, 1000);
-
-// منع المشاكل الافتراضية للمس في المتصفح
-document.addEventListener('touchstart', (e) => {
-    if (e.touches.length > 1) e.preventDefault();
-}, { passive: false });
